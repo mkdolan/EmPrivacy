@@ -1,7 +1,7 @@
 {
   "//": "SPDX-License-Identifier: MIT",
   "name": "emprivacy",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Cookie consent and privacy notices for EmDash (GDPR, CCPA/CIPA-oriented configuration)",
   "type": "module",
   "main": "dist/index.mjs",

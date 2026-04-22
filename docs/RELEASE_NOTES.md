@@ -1,5 +1,11 @@
 <!-- SPDX-License-Identifier: MIT -->
 
+# emprivacy v0.1.5
+
+## Changes
+
+- Fix Cloudflare Web Analytics when consent is granted from the initial banner by reloading after persisting choices (ensures the beacon runs in a normal page lifecycle).
+
 # emprivacy v0.1.4
 
 ## Changes
