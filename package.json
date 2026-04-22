@@ -54,16 +54,20 @@
   "publishConfig": {
     "access": "public"
   },
+  "overrides": {
+    "kysely": "0.28.16"
+  },
   "scripts": {
     "sync:version": "node scripts/write-version.mjs",
     "verify:exports": "node scripts/verify-exports.mjs",
     "build": "tsdown src/index.ts src/sandbox-entry.ts --format esm --dts --clean",
     "dev": "tsdown src/index.ts src/sandbox-entry.ts --format esm --dts --watch",
     "typecheck": "tsc --noEmit",
+    "audit": "npm audit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "prepublishOnly": "npm run sync:version && npm run typecheck && npm run build && npm test && npm run verify:exports",
-    "preversion": "npm run sync:version && npm run typecheck && npm run build && npm test && npm run verify:exports",
+    "prepublishOnly": "npm run sync:version && npm run typecheck && npm run build && npm test && npm run verify:exports && npm run audit",
+    "preversion": "npm run sync:version && npm run typecheck && npm run build && npm test && npm run verify:exports && npm run audit",
     "release:patch": "npm version patch",
     "release:minor": "npm version minor",
     "release:major": "npm version major"

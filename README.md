@@ -86,6 +86,8 @@ npm run test:watch  # Vitest in watch mode (optional)
 
 Outputs ESM under `dist/` with typings, matching the [plugin layout](https://www.npmjs.com/package/@emdash-cms/plugin-audit-log) used by other EmDash packages.
 
+Dependency, audit, and deprecation context (Kysely override, `npm audit`): [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
+
 ## Testing
 
 ### Automated (local or CI)
