@@ -1,5 +1,12 @@
 <!-- SPDX-License-Identifier: MIT -->
 
+# emprivacy (upcoming)
+
+## Changes
+
+- **Re-open consent** — After the first choice, a floating **cookie** control (bottom-left) re-opens the consent panel. Changing choices and saving **reloads** the page so analytics/marketing script loading matches the new consent (including when revoking). Duplicate `<script src>` tags for the same URL on one page are avoided when possible.
+- **Analytics platforms** — Admin **radio**: **Cloudflare Web Analytics** (default), **None**, or **Custom** script URLs. For Cloudflare, paste the **site token** from the dashboard; EmPrivacy injects `https://static.cloudflareinsights.com/beacon.min.js` with `defer` and `data-cf-beacon='{"token":"…"}'` after analytics consent. Legacy configs with only `analyticsScriptUrls` in KV are treated as **Custom**.
+
 # emprivacy v0.1.3
 
 ## Changes

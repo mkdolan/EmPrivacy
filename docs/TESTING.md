@@ -23,11 +23,12 @@ Work through the checklist from the main [README](../README.md) (also copied bel
 ### Core flows
 
 1. **Banner** — Incognito window: banner appears when there is no `emprivacy_cc` cookie or when **Policy / consent version** in admin does not match the cookie’s `v` field.
-2. **Strict defaults** — With strict mode on, deny non-essential and confirm configured analytics/marketing URLs do **not** appear in Network until the user accepts (or enables those categories in Customize).
-3. **Persistence** — After accept, reload: banner stays closed; scripts load according to saved choices (Network tab).
-4. **Admin** — EmPrivacy settings page loads, **Save** persists; public banner text and links match what you saved (after refresh / new request).
-5. **Optional server log** — Enable “Log consent…”; submit consent; confirm a row appears under recent records and `POST /_emdash/api/plugins/emprivacy/record` succeeds (200, `{ ok: true }`) in Network.
-6. **Optional Google Consent Mode** — Enable in admin; verify a denied-default snippet exists in `<head>` before interaction, and updates after choice (see [Google’s Consent Mode docs](https://support.google.com/tagmanager/answer/13695607)).
+2. **Re-open consent** — After dismissing the banner, confirm a **cookie button** appears (bottom-left). Click it: the same options appear; **Save choices** (or Accept/Reject) reloads the page. After reload, **Network** should list analytics scripts only if analytics is on; turn analytics off, save, reload, and those scripts should not run. If you use **Cloudflare Web Analytics** in admin, after consent confirm `beacon.min.js` loads and the tag includes `data-cf-beacon` with your token.
+3. **Strict defaults** — With strict mode on, deny non-essential and confirm configured analytics/marketing URLs do **not** appear in Network until the user accepts (or enables those categories in Customize).
+4. **Persistence** — After accept, reload: banner stays closed; scripts load according to saved choices (Network tab).
+5. **Admin** — EmPrivacy settings page loads, **Save** persists; public banner text and links match what you saved (after refresh / new request).
+6. **Optional server log** — Enable “Log consent…”; submit consent; confirm a row appears under recent records and `POST /_emdash/api/plugins/emprivacy/record` succeeds (200, `{ ok: true }`) in Network.
+7. **Optional Google Consent Mode** — Enable in admin; verify a denied-default snippet exists in `<head>` before interaction, and updates after choice (see [Google’s Consent Mode docs](https://support.google.com/tagmanager/answer/13695607)).
 
 ### Regression triggers
 

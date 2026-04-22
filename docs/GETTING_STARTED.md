@@ -9,7 +9,7 @@ This guide is for site builders who want cookie consent working on an **EmDash**
 - A **banner** on first visit (or after you change **Policy / consent version**).
 - Toggles for **Analytics** and **Marketing** (essential/theme cookies are not blocked by this plugin—see the main README).
 - **Privacy and cookie policy links** you control: usually an EmDash **Page** via a short **path** (e.g. `/privacy`) or a full `https://` link. Paths are turned into full URLs using EmDash’s URL helper so they work in dev and production.
-- **Third-party scripts** only from URLs you enter (one `https://` URL per line); they load **after** consent for that category.
+- **Analytics** — choose a **platform** in admin (e.g. **Cloudflare Web Analytics** and your **site token**, or **Custom** with one `https://` script URL per line, or **None**). **Marketing** — `https` script URLs, one per line. Scripts load **after** consent for that category.
 
 ## Before you begin
 
@@ -83,16 +83,23 @@ Same idea for an optional **Cookie policy** field: path (e.g. `/cookies`) or `ht
    - **Cookie policy** — optional; same rules.
    - **Banner title** and **Short notice**.
    - **Policy / consent version** — bump when you change legal text so visitors see the banner again.
-   - **Analytics** / **Marketing script URLs** — one **`https://`** URL per line, or leave blank.
+   - **Analytics platform** — *Cloudflare Web Analytics* (default), *None*, or *Custom* (see below).
+   - **Cloudflare** — In the [Cloudflare dashboard](https://dash.cloudflare.com/) → **Web Analytics**, copy the **site token** for your property and paste it into **Cloudflare Web Analytics site token**. EmPrivacy injects the standard `beacon.min.js` script with `data-cf-beacon='{"token":"…"}'` after the visitor consents to analytics.
+   - **Custom analytics** — If you pick **Custom**, one **`https://`** script URL per line, `src` only (not a full `<script>` block); see [Custom script URLs (not HTML)](#custom-script-urls-not-html) below.
+   - **Marketing script URLs** — one **`https://`** URL per line, or leave blank.
 4. Optional: **Strict defaults**, **Google Consent Mode v2**, **Log consent to server** (see main README).
 5. **Save settings**.
+
+**Custom script URLs (not HTML)** (only when **Analytics** is set to **Custom**)
+
+Each line must be a **full https URL** to a `.js` file (the script `src`). **Do not** paste HTML comments, tags, or attributes. EmPrivacy injects with `<script src="…">` only (no `data-*` for custom mode).
 
 ---
 
 ## Step 6 — Verify on the public site
 
 1. Use a **private/incognito** window (or clear site cookies).
-2. Confirm the **banner** appears.
+2. Confirm the **banner** appears. After you save a choice, a small **cookie button** stays in the bottom-left; click it to **change** analytics/marketing choices (the page reloads when you save from that panel so consent stays in sync with loaded scripts).
 3. Click **Privacy policy** (and **Cookie policy** if set): they should open the EmDash Page or external URL you configured.
 4. In **Developer tools → Network**: before accepting, listed third-party scripts should not load; after consent, they should load only for the categories you allowed.
 5. Reload: the banner should stay dismissed if the cookie matches your **Policy / consent version**.
@@ -119,6 +126,7 @@ For a full staging checklist (banner, strict mode, admin, optional logging, Goog
 | Scripts load before consent | No hard-coded third-party scripts in the theme; EmPrivacy listed **before** those plugins in `plugins` |
 | EmPrivacy missing in admin | Plugin not installed or `astro.config` wrong; check build errors |
 | Save fails on privacy/cookie | Value must be a **root-relative path** (`/something`) or **`https://…`** (not `http://` or a bare hostname) |
+| Save fails: “Invalid … script URL” | For **Custom** analytics or **Marketing** URLs, enter one **https URL** per line (the script `src`), not a `<script>` tag. See [Custom script URLs (not HTML)](#custom-script-urls-not-html) |
 | Privacy link 404 or wrong page | Path must match the live EmDash route (compare with the address bar when viewing that Page) |
 | Link works on staging but path looks wrong | Paths are resolved with EmDash `ctx.url()`; ensure the Page is published and the path matches production routing |
 

@@ -3,6 +3,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+	assertValidCloudflareToken,
 	assertValidSavedConfig,
 	isRootRelativeSitePath,
 	jsonForHtmlScript,
@@ -32,6 +33,8 @@ describe("normalizeConfig", () => {
 		const n = normalizeConfig(null);
 		expect(n.policyVersion).toBe("1");
 		expect(n.analyticsScriptUrls).toEqual([]);
+		expect(n.analyticsProvider).toBe("cloudflare");
+		expect(n.cloudflareWebAnalyticsToken).toBe("");
 	});
 
 	it("merges partial objects", () => {
@@ -39,6 +42,12 @@ describe("normalizeConfig", () => {
 		expect(n.policyVersion).toBe("2026-04");
 		expect(n.bannerTitle).toBe("Hi");
 		expect(n.privacyPolicyUrl).toBe("/privacy");
+	});
+
+	it("infers custom when legacy analyticsScriptUrls only", () => {
+		const n = normalizeConfig({ analyticsScriptUrls: ["https://a.test/x.js"] });
+		expect(n.analyticsProvider).toBe("custom");
+		expect(n.analyticsScriptUrls).toEqual(["https://a.test/x.js"]);
 	});
 });
 
@@ -73,16 +82,42 @@ describe("assertValidSavedConfig", () => {
 		cookiePolicyUrl: "",
 		strictDefaults: true,
 		policyVersion: "1",
+		analyticsPlatform: "custom",
+		cloudflareToken: "",
 		analyticsUrlsText: "https://cdn.example/a.js",
 		marketingUrlsText: "",
 		googleConsentMode: false,
 		logConsentToServer: false,
 	};
 
-	it("accepts valid https URLs", () => {
+	it("accepts valid https URLs for custom analytics", () => {
 		const c = assertValidSavedConfig(base);
+		expect(c.analyticsProvider).toBe("custom");
 		expect(c.analyticsScriptUrls).toEqual(["https://cdn.example/a.js"]);
 		expect(c.privacyPolicyUrl).toBe("https://privacy.example/p");
+	});
+
+	it("accepts Cloudflare platform with site token", () => {
+		const c = assertValidSavedConfig({
+			...base,
+			analyticsPlatform: "cloudflare",
+			cloudflareToken: "fd1a6145ed17476caba48ada7af9f45f",
+			analyticsUrlsText: "",
+		});
+		expect(c.analyticsProvider).toBe("cloudflare");
+		expect(c.cloudflareWebAnalyticsToken).toBe("fd1a6145ed17476caba48ada7af9f45f");
+		expect(c.analyticsScriptUrls).toEqual([]);
+	});
+
+	it("rejects Cloudflare token with invalid characters", () => {
+		expect(() =>
+			assertValidSavedConfig({
+				...base,
+				analyticsPlatform: "cloudflare",
+				cloudflareToken: "bad<token",
+				analyticsUrlsText: "",
+			}),
+		).toThrow(/invalid characters/);
 	});
 
 	it("accepts root-relative EmDash Page path for privacy", () => {
@@ -102,13 +137,31 @@ describe("assertValidSavedConfig", () => {
 		).toThrow(/https/);
 	});
 
-	it("rejects invalid analytics URL", () => {
+	it("rejects invalid analytics URL for custom", () => {
 		expect(() =>
 			assertValidSavedConfig({
 				...base,
 				analyticsUrlsText: "http://bad.example/x.js",
 			}),
 		).toThrow(/analytics/);
+	});
+
+	it("rejects pasted HTML and suggests a plain https URL for custom", () => {
+		expect(() =>
+			assertValidSavedConfig({
+				...base,
+				analyticsUrlsText: '<script src="https://x.test/a.js">',
+			}),
+		).toThrow(/Paste one full https:\/\//);
+	});
+});
+
+describe("assertValidCloudflareToken", () => {
+	it("allows empty", () => {
+		expect(() => assertValidCloudflareToken("  ")).not.toThrow();
+	});
+	it("allows hex-style token", () => {
+		expect(() => assertValidCloudflareToken("fd1a6145ed17476caba48ada7af9f45f")).not.toThrow();
 	});
 });
 

@@ -95,13 +95,40 @@ var c=parseState(readCookie());
 if(!c||c.v!==C.policyVersion)return true;
 return false;
 }
+function alreadyScriptSrc(u){
+try{
+return Array.prototype.some.call(document.getElementsByTagName("script"),function(s){
+return s.src===u;
+});
+}catch(e){
+return false;
+}
+}
 function loadScript(src){
+if(alreadyScriptSrc(src))return;
 var e=document.createElement("script");
 e.src=src;e.async=true;e.referrerPolicy="no-referrer-when-downgrade";
 document.head.appendChild(e);
 }
+function loadCloudflareBeacon(token){
+var u="https://static.cloudflareinsights.com/beacon.min.js";
+if(!token)return;
+if(alreadyScriptSrc(u))return;
+var e=document.createElement("script");
+e.src=u;
+e.defer=true;
+e.setAttribute("data-cf-beacon",JSON.stringify({token:token}));
+e.referrerPolicy="no-referrer-when-downgrade";
+document.head.appendChild(e);
+}
 function applyScripts(a,m){
-if(a)C.analyticsScriptUrls.forEach(loadScript);
+if(a){
+if(C.analyticsProvider==="cloudflare"){
+loadCloudflareBeacon(C.cloudflareToken);
+}else if(C.analyticsProvider==="custom"){
+C.analyticsScriptUrls.forEach(loadScript);
+}
+}
 if(m)C.marketingScriptUrls.forEach(loadScript);
 }
 function gtagUpdate(a,m){
@@ -129,7 +156,126 @@ function show(el){if(el)el.removeAttribute("hidden");el&&(el.style.display="");}
 function mount(){
 var root=document.getElementById("emprivacy-root");
 if(!root)return;
-if(!needBanner()){var st=parseState(readCookie());applyScripts(st&&st.a,st&&st.m);gtagUpdate(st&&st.a,st&&st.m);return;}
+var trigger=document.createElement("button");
+trigger.type="button";
+trigger.className="emprivacy-cookie-trigger";
+trigger.setAttribute("aria-label","Cookie and privacy settings");
+var ic=document.createElement("span");
+ic.setAttribute("aria-hidden","true");
+ic.className="emprivacy-cookie-trigger-icon";
+ic.appendChild(document.createTextNode("🍪"));
+trigger.appendChild(ic);
+function showTrigger(){
+trigger.removeAttribute("hidden");
+}
+function hideTrigger(){
+trigger.setAttribute("hidden","");
+}
+function mkRow(label,id,on){
+var w=document.createElement("label");
+w.className="emprivacy-switch";
+var cb=document.createElement("input");
+cb.type="checkbox";
+cb.id=id;
+cb.checked=on;
+w.appendChild(cb);
+w.appendChild(document.createTextNode(" "+label));
+return {wrap:w,box:cb};
+}
+function addPolicyLinks(links){
+function addOne(href,text){
+if(!href)return;
+var ok=href.indexOf("https://")===0||href.indexOf("http://")===0;
+if(!ok)return;
+var a=document.createElement("a");
+a.href=href;
+a.rel="nofollow noopener";
+a.target="_blank";
+a.appendChild(document.createTextNode(text));
+links.appendChild(a);
+}
+addOne(C.privacyPolicyUrl,"Privacy policy");
+if(C.cookiePolicyUrl)addOne(C.cookiePolicyUrl,"Cookie policy");
+}
+function openReopenPanel(){
+if(root.querySelector(".emprivacy-bar--reopen"))return;
+var st=parseState(readCookie());
+if(!st||st.v!==C.policyVersion)return;
+hideTrigger();
+var aOn=!!st.a;
+var mOn=!!st.m;
+var bar=document.createElement("div");
+bar.className="emprivacy-bar emprivacy-bar--reopen";
+bar.setAttribute("role","dialog");
+bar.setAttribute("aria-modal","true");
+var title=document.createElement("h2");
+title.className="emprivacy-title";
+title.appendChild(document.createTextNode(C.bannerTitle));
+var msg=document.createElement("p");
+msg.className="emprivacy-msg";
+msg.appendChild(document.createTextNode(C.bannerMessage));
+var links=document.createElement("div");
+links.className="emprivacy-links";
+addPolicyLinks(links);
+var opts=document.createElement("div");
+opts.className="emprivacy-opts";
+var er=mkRow("Analytics","emprivacy-ra",aOn);
+var mr=mkRow("Marketing","emprivacy-rm",mOn);
+opts.appendChild(er.wrap);
+opts.appendChild(mr.wrap);
+var actions=document.createElement("div");
+actions.className="emprivacy-actions";
+function doReopenPersist(a,m){
+writeCookie(JSON.stringify({v:C.policyVersion,a:a?1:0,m:m?1:0}));
+logServer(a,m);
+location.reload();
+}
+var btnAll=document.createElement("button");
+btnAll.type="button";
+btnAll.className="emprivacy-btn emprivacy-btn-primary";
+btnAll.appendChild(document.createTextNode("Accept all"));
+btnAll.addEventListener("click",function(){doReopenPersist(true,true);});
+var btnRej=document.createElement("button");
+btnRej.type="button";
+btnRej.className="emprivacy-btn";
+btnRej.appendChild(document.createTextNode("Reject non-essential"));
+btnRej.addEventListener("click",function(){doReopenPersist(false,false);});
+var btnSave=document.createElement("button");
+btnSave.type="button";
+btnSave.className="emprivacy-btn emprivacy-btn-primary";
+btnSave.appendChild(document.createTextNode("Save choices"));
+btnSave.addEventListener("click",function(){doReopenPersist(!!er.box.checked,!!mr.box.checked);});
+var btnClose=document.createElement("button");
+btnClose.type="button";
+btnClose.className="emprivacy-btn";
+btnClose.appendChild(document.createTextNode("Close"));
+btnClose.addEventListener("click",function(){
+if(bar.parentNode)bar.parentNode.removeChild(bar);
+showTrigger();
+});
+actions.appendChild(btnAll);
+actions.appendChild(btnRej);
+actions.appendChild(btnSave);
+actions.appendChild(btnClose);
+bar.appendChild(title);
+bar.appendChild(msg);
+bar.appendChild(links);
+bar.appendChild(opts);
+bar.appendChild(actions);
+root.appendChild(bar);
+}
+root.appendChild(trigger);
+hideTrigger();
+if(!needBanner()){
+var st=parseState(readCookie());
+applyScripts(st&&st.a,st&&st.m);
+gtagUpdate(st&&st.a,st&&st.m);
+showTrigger();
+trigger.addEventListener("click",function(){openReopenPanel();});
+return;
+}
+var aOn=C.strictDefaults?false:true;
+var mOn=C.strictDefaults?false:true;
 var bar=document.createElement("div");
 bar.className="emprivacy-bar";
 bar.setAttribute("role","dialog");
@@ -140,60 +286,56 @@ title.appendChild(document.createTextNode(C.bannerTitle));
 var msg=document.createElement("p");
 msg.className="emprivacy-msg";
 msg.appendChild(document.createTextNode(C.bannerMessage));
+var links=document.createElement("div");
+links.className="emprivacy-links";
+addPolicyLinks(links);
 var opts=document.createElement("div");
 opts.className="emprivacy-opts";
 opts.setAttribute("hidden","");
-var aOn=C.strictDefaults?false:true;
-var mOn=C.strictDefaults?false:true;
-function mkRow(label,id,on){
-var w=document.createElement("label");
-w.className="emprivacy-switch";
-var cb=document.createElement("input");
-cb.type="checkbox";cb.id=id;cb.checked=on;
-w.appendChild(cb);
-w.appendChild(document.createTextNode(" "+label));
-return {wrap:w,box:cb};
-}
 var er=mkRow("Analytics","emprivacy-a",aOn);
 var mr=mkRow("Marketing","emprivacy-m",mOn);
-opts.appendChild(er.wrap);opts.appendChild(mr.wrap);
+opts.appendChild(er.wrap);
+opts.appendChild(mr.wrap);
 var actions=document.createElement("div");
 actions.className="emprivacy-actions";
 function persist(a,m){
-var payload=JSON.stringify({v:C.policyVersion,a:a?1:0,m:m?1:0});
-writeCookie(payload);
-applyScripts(a,m);gtagUpdate(a,m);logServer(a,m);hide(bar);
+writeCookie(JSON.stringify({v:C.policyVersion,a:a?1:0,m:m?1:0}));
+applyScripts(a,m);
+gtagUpdate(a,m);
+logServer(a,m);
+hide(bar);
+showTrigger();
 }
 var btnAll=document.createElement("button");
-btnAll.type="button";btnAll.className="emprivacy-btn emprivacy-btn-primary";
+btnAll.type="button";
+btnAll.className="emprivacy-btn emprivacy-btn-primary";
 btnAll.appendChild(document.createTextNode("Accept all"));
 btnAll.addEventListener("click",function(){persist(true,true);});
 var btnRej=document.createElement("button");
-btnRej.type="button";btnRej.className="emprivacy-btn";
+btnRej.type="button";
+btnRej.className="emprivacy-btn";
 btnRej.appendChild(document.createTextNode("Reject non-essential"));
 btnRej.addEventListener("click",function(){persist(false,false);});
 var btnCust=document.createElement("button");
-btnCust.type="button";btnCust.className="emprivacy-btn";
+btnCust.type="button";
+btnCust.className="emprivacy-btn";
 btnCust.appendChild(document.createTextNode("Customize"));
 btnCust.addEventListener("click",function(){show(opts);btnSave.removeAttribute("hidden");});
 var btnSave=document.createElement("button");
-btnSave.type="button";btnSave.className="emprivacy-btn emprivacy-btn-primary";
+btnSave.type="button";
+btnSave.className="emprivacy-btn emprivacy-btn-primary";
 btnSave.setAttribute("hidden","");
 btnSave.appendChild(document.createTextNode("Save choices"));
 btnSave.addEventListener("click",function(){persist(!!er.box.checked,!!mr.box.checked);});
-var links=document.createElement("div");
-links.className="emprivacy-links";
-function addLink(href,text){
-if(!href)return;var ok=href.indexOf("https://")===0||href.indexOf("http://")===0;if(!ok)return;
-var a=document.createElement("a");
-a.href=href;a.rel="nofollow noopener";
-a.target="_blank";a.appendChild(document.createTextNode(text));
-links.appendChild(a);
-}
-addLink(C.privacyPolicyUrl,"Privacy policy");
-if(C.cookiePolicyUrl)addLink(C.cookiePolicyUrl,"Cookie policy");
-actions.appendChild(btnAll);actions.appendChild(btnRej);actions.appendChild(btnCust);actions.appendChild(btnSave);
-bar.appendChild(title);bar.appendChild(msg);bar.appendChild(links);bar.appendChild(opts);bar.appendChild(actions);
+actions.appendChild(btnAll);
+actions.appendChild(btnRej);
+actions.appendChild(btnCust);
+actions.appendChild(btnSave);
+bar.appendChild(title);
+bar.appendChild(msg);
+bar.appendChild(links);
+bar.appendChild(opts);
+bar.appendChild(actions);
 root.appendChild(bar);
 }
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",mount);
@@ -257,6 +399,8 @@ export default definePlugin({
 					cookiePolicyUrl: cookieResolved,
 					strictDefaults: cfg.strictDefaults,
 					policyVersion: cfg.policyVersion,
+					analyticsProvider: cfg.analyticsProvider,
+					cloudflareToken: cfg.cloudflareWebAnalyticsToken,
 					analyticsScriptUrls: cfg.analyticsScriptUrls,
 					marketingScriptUrls: cfg.marketingScriptUrls,
 					googleConsentMode: cfg.googleConsentMode,
@@ -279,6 +423,12 @@ export default definePlugin({
 .emprivacy-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 .emprivacy-btn{border-radius:6px;border:1px solid #555;background:#222;color:#eee;padding:8px 12px;cursor:pointer}
 .emprivacy-btn-primary{background:#3b82f6;border-color:#3b82f6;color:#fff}
+.emprivacy-cookie-trigger{position:fixed;z-index:99998;left:16px;bottom:16px;width:48px;height:48px;border-radius:50%;border:1px solid #555;background:#222;color:#e8b86d;box-shadow:0 2px 12px rgba(0,0,0,.2);cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}
+.emprivacy-cookie-trigger:hover{background:#2a2a2a}
+.emprivacy-cookie-trigger:focus{outline:2px solid #3b82f6;outline-offset:2px}
+.emprivacy-cookie-trigger[hidden]{display:none!important}
+.emprivacy-cookie-trigger-icon{font-size:1.35rem;line-height:1}
+.emprivacy-bar--reopen{z-index:100000}
 </style>`,
 				};
 
@@ -337,6 +487,8 @@ export default definePlugin({
 							cookiePolicyUrl: String(v.cookie_url ?? ""),
 							strictDefaults: asBool(v.strict_defaults),
 							policyVersion: String(v.policy_version ?? ""),
+							analyticsPlatform: String(v.analytics_platform ?? "cloudflare"),
+							cloudflareToken: String(v.cloudflare_token ?? ""),
 							analyticsUrlsText: String(v.analytics_urls ?? ""),
 							marketingUrlsText: String(v.marketing_urls ?? ""),
 							googleConsentMode: asBool(v.google_cm),
@@ -396,6 +548,7 @@ async function buildSettingsPage(ctx: PluginContext) {
 	const cfg = await loadConfig(ctx);
 	const analyticsText = cfg.analyticsScriptUrls.join("\n");
 	const marketingText = cfg.marketingScriptUrls.join("\n");
+	const platform = cfg.analyticsProvider;
 
 	const consentFields = await (async () => {
 		try {
@@ -423,7 +576,7 @@ async function buildSettingsPage(ctx: PluginContext) {
 			},
 			{
 				type: "context" as const,
-				text: "Configure the public banner and which third-party script URLs may load after consent. This plugin only injects scripts you list here — it does not execute arbitrary HTML from this form.",
+				text: "Configure the public banner. **Analytics:** pick a platform (Cloudflare is built in — enter your **site token** from Cloudflare → Web Analytics; EmPrivacy injects the standard beacon with `data-cf-beacon` after consent). **None** = no third-party analytics scripts. **Custom** = one `https://` script URL per line, `src` only. **Marketing:** `https` script URLs, one per line, after marketing consent. No arbitrary admin HTML in the public site.",
 			},
 			{
 				type: "context" as const,
@@ -474,16 +627,38 @@ async function buildSettingsPage(ctx: PluginContext) {
 						initial_value: cfg.strictDefaults,
 					},
 					{
+						type: "radio" as const,
+						action_id: "analytics_platform",
+						label: "Analytics platform",
+						options: [
+							{ value: "cloudflare", label: "Cloudflare Web Analytics" },
+							{ value: "none", label: "None" },
+							{ value: "custom", label: "Custom (https script URLs, one per line)" },
+						],
+						initial_value: platform,
+					},
+					{
+						type: "text_input" as const,
+						action_id: "cloudflare_token",
+						label: "Cloudflare Web Analytics site token",
+						placeholder: "Token from Web Analytics in the Cloudflare dashboard",
+						initial_value: cfg.cloudflareWebAnalyticsToken,
+						condition: { field: "analytics_platform", eq: "cloudflare" },
+					},
+					{
 						type: "text_input" as const,
 						action_id: "analytics_urls",
-						label: "Analytics script URLs (one https URL per line)",
+						label: "Custom analytics script URLs (one https URL per line, not a <script> tag)",
+						placeholder: "https://… (one per line)",
 						multiline: true,
 						initial_value: analyticsText,
+						condition: { field: "analytics_platform", eq: "custom" },
 					},
 					{
 						type: "text_input" as const,
 						action_id: "marketing_urls",
-						label: "Marketing script URLs (one https URL per line)",
+						label: "Marketing script URLs (one https URL per line, not a <script> tag)",
+						placeholder: "https://… (one per line)",
 						multiline: true,
 						initial_value: marketingText,
 					},

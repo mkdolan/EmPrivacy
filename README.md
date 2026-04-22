@@ -43,11 +43,11 @@ Or use a Git dependency / `npm link` while developing.
 3. **Configure EmPrivacy in the admin** (shield → **EmPrivacy**):
    - **Privacy policy** — Point to your existing EmDash **Page** using its **public path** (what you see in the address bar when that Page is open, e.g. `/privacy`), **or** a full `https://…` URL if the policy is hosted elsewhere. Root-relative paths are resolved with EmDash `ctx.url()` so links stay correct across environments.
    - **Cookie policy** (optional) — Same rules: EmDash Page path or `https://…`.
-   - Set banner copy, **Policy / consent version**, and optionally one **https** script URL per line for analytics / marketing.
+   - Set banner copy, **Policy / consent version**, **Analytics** (Cloudflare site token, **None**, or **Custom** `https` URLs), and **Marketing** script URLs (`https`, one per line). See [GETTING_STARTED](docs/GETTING_STARTED.md#step-5--configure-emprivacy-in-the-admin).
 
 See [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) for a step-by-step path from “create a Page” to “verify the link in the banner.”
 
-Visitors see a banner on first visit (or when you bump **Policy / consent version**). Third-party scripts you list load only **after** the user consents to the matching category.
+Visitors see a banner on first visit (or when you bump **Policy / consent version**). Configured analytics (e.g. Cloudflare beacon) and marketing scripts load only **after** the user consents to the matching category.
 
 ## Features
 
@@ -55,7 +55,9 @@ Visitors see a banner on first visit (or when you bump **Policy / consent versio
 |--------|-------------|
 | Categories | Essential (informational), **Analytics**, **Marketing** |
 | Privacy / cookie links | EmDash **Page** as a root path (e.g. `/privacy`) or external `https://` URL; paths resolve via `ctx.url()` in hooks so public URLs stay correct when the site origin changes |
-| Script gating | Only **https** URLs you list are injected as `<script src>` after consent—no arbitrary admin HTML |
+| Analytics platforms | **Cloudflare Web Analytics** — enter your site token; the beacon is injected with `data-cf-beacon` after consent. **None** / **Custom** (`https` URLs) also supported; more platforms can be added over time |
+| Marketing scripts | Only **https** URLs you list are injected as `<script src>` after marketing consent—no arbitrary admin HTML |
+| Re-open preferences | After the first choice, a **cookie button** (bottom-left) re-opens the same options; saving from that panel **reloads** the page so script loading matches the latest consent (including revoking) |
 | Consent cookie | `emprivacy_cc` (`path=/`, `SameSite=Lax`, `Secure` on HTTPS), JSON `{ v, a, m }` (version, analytics, marketing) |
 | Optional server log | POST consent snapshots to `/_emdash/api/plugins/emprivacy/record` + optional storage rows (no IP in v1) |
 | Google Consent Mode v2 | Optional denied defaults in `<head>` + `gtag('consent','update',…)` — validate with [Google’s docs](https://support.google.com/tagmanager/answer/13695607) |

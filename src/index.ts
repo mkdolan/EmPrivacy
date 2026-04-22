@@ -6,9 +6,11 @@ import { PLUGIN_ID } from "./config.js";
 import { VERSION } from "./version.js";
 
 export type {
+	AnalyticsProvider,
 	EmprivacyConfig,
 	ConsentRecordPayload,
 } from "./config.js";
+export { assertValidCloudflareToken } from "./config.js";
 export {
 	KV_KEY,
 	COOKIE_NAME,
