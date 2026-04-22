@@ -1,5 +1,8 @@
 # SPDX-License-Identifier: MIT
 
+# Local maintainer runbook (not committed; keep a backup or team copy)
+MAINTAINER_RELEASE.md
+
 node_modules/
 dist/
 *.tgz
