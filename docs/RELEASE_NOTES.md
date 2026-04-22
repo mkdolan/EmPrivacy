@@ -1,5 +1,13 @@
 <!-- SPDX-License-Identifier: MIT -->
 
+# emprivacy v0.1.2
+
+## Changes
+
+- `verify:exports` script: fail the release if `main` / `exports` paths are missing from `dist/` after build.
+- `publishConfig.access: "public"` for explicit npm visibility.
+- Documented safe-publishing workflow in `docs/RELEASES.md`; CI runs `verify:exports` after `build`.
+
 # emprivacy v0.1.1
 
 ## Changes

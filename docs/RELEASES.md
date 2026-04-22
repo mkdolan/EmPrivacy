@@ -16,6 +16,21 @@ Published **npm** versions of `emprivacy` follow **[Semantic Versioning 2.0.0](h
 
 **Policy / consent version** (in the EmDash admin) is separate from package semver: it only re-prompts visitors when your legal text or choices change.
 
+## Safe publishing (npm)
+
+These guards keep published tarballs consistent with `package.json` and avoid shipping stale or missing `dist/` output.
+
+- **`dist/` is not committed** — It is listed in `.gitignore`. Build artifacts are produced locally, in CI, and **immediately before publish** via lifecycle scripts.
+- **`prepublishOnly` and `preversion`** — Run `sync:version` (keeps `src/version.ts` aligned with `package.json`), `typecheck`, `build`, `test`, and **`verify:exports`** (confirms every path in `main` / `exports` exists on disk after the build).
+- **Install range** — Pin consumers with semver as needed, e.g. `emprivacy@^0.1.0`.
+
+Before publishing, you can inspect the tarball:
+
+```bash
+npm run build
+npm pack --dry-run
+```
+
 ## Cutting a release (maintainers)
 
 1. Ensure `main` (or your release branch) is green: `npm ci`, then `npm run typecheck`, `npm run build`, `npm test`.

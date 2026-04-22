@@ -1,7 +1,7 @@
 {
   "//": "SPDX-License-Identifier: MIT",
   "name": "emprivacy",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Cookie consent and privacy notices for EmDash (GDPR, CCPA/CIPA-oriented configuration)",
   "type": "module",
   "main": "dist/index.mjs",
@@ -51,15 +51,19 @@
     "url": "https://github.com/emdash-cms/EmPrivacy/issues"
   },
   "homepage": "https://github.com/emdash-cms/EmPrivacy#readme",
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "sync:version": "node scripts/write-version.mjs",
+    "verify:exports": "node scripts/verify-exports.mjs",
     "build": "tsdown src/index.ts src/sandbox-entry.ts --format esm --dts --clean",
     "dev": "tsdown src/index.ts src/sandbox-entry.ts --format esm --dts --watch",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "prepublishOnly": "npm run sync:version && npm run typecheck && npm run build && npm test",
-    "preversion": "npm run sync:version && npm run typecheck && npm run build && npm test",
+    "prepublishOnly": "npm run sync:version && npm run typecheck && npm run build && npm test && npm run verify:exports",
+    "preversion": "npm run sync:version && npm run typecheck && npm run build && npm test && npm run verify:exports",
     "release:patch": "npm version patch",
     "release:minor": "npm version minor",
     "release:major": "npm version major"
