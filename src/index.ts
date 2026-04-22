@@ -3,6 +3,7 @@
 import type { PluginDescriptor } from "emdash";
 
 import { PLUGIN_ID } from "./config.js";
+import { VERSION } from "./version.js";
 
 export type {
 	EmprivacyConfig,
@@ -17,8 +18,6 @@ export {
 	resolvePolicyHref,
 	isValidPolicyHrefInput,
 } from "./config.js";
-
-const VERSION = "0.1.0";
 
 /**
  * EmDash plugin descriptor — add to `plugins: []` in `emdash({ ... })` inside `astro.config`.

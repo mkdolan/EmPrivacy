@@ -1,5 +1,12 @@
 <!-- SPDX-License-Identifier: MIT -->
 
+# emprivacy v0.1.1
+
+## Changes
+
+- Packaging/release safety improvements for npm publishing (publish-time checks + version sync).
+- Added CI workflow to run `typecheck`, `test`, and `build` on PRs/pushes.
+
 # emprivacy v0.1.0 — initial release
 
 First published **npm** release of **EmPrivacy**, an open source [EmDash](https://github.com/emdash-cms/emdash) plugin for cookie consent, category-based choices (essential / analytics / marketing), and **client-side** loading of third-party scripts only after consent.
