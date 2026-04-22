@@ -24,6 +24,10 @@ npm run build
 2. Run `npm run typecheck`, `npm run build`, and `npm test` before pushing.
 3. Keep commits focused; avoid unrelated formatting changes.
 
+## Releases (maintainers)
+
+npm versions use **semver**; workflow and bump guidance: [docs/RELEASES.md](./docs/RELEASES.md).
+
 ## Security
 
 - Never inject unsanitized admin strings into `innerHTML` in the public bootstrap; use `textContent` / JSON config as we do now.

@@ -16,6 +16,8 @@
 npm install emprivacy
 ```
 
+Use a **semver range** if you want controlled upgrades, for example `emprivacy@^0.1.0`. Versioning policy and maintainer release steps: [docs/RELEASES.md](docs/RELEASES.md).
+
 Or use a Git dependency / `npm link` while developing.
 
 ## Quick start
@@ -125,6 +127,10 @@ Details: [docs/TESTING.md](docs/TESTING.md).
 - [ ] Optional: server logging + recent records in admin
 - [ ] Optional: Google Consent Mode (Tag Assistant / [Google](https://support.google.com/tagmanager/answer/13695607))
 - [ ] **Trusted** `plugins: []` (see [Requirements](#requirements))
+
+## Releases
+
+npm releases follow **[Semantic Versioning](https://semver.org/)** (`MAJOR.MINOR.PATCH`). Tags are `v`-prefixed (e.g. `v0.1.0`). See [docs/RELEASES.md](docs/RELEASES.md) for bump rules, `npm version` / `npm run release:*`, and publish checklist.
 
 ## License
 

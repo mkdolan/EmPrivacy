@@ -56,7 +56,11 @@
     "dev": "tsdown src/index.ts src/sandbox-entry.ts --format esm --dts --watch",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "preversion": "npm run typecheck && npm run build && npm test",
+    "release:patch": "npm version patch",
+    "release:minor": "npm version minor",
+    "release:major": "npm version major"
   },
   "engines": {
     "node": ">=20"

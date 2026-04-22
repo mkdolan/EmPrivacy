@@ -24,6 +24,8 @@ This guide is for site builders who want cookie consent working on an **EmDash**
 npm install emprivacy
 ```
 
+The package is versioned with **semver** on npm; to pin a line, use a range such as `emprivacy@^0.1.0`. See [RELEASES.md](./RELEASES.md) for how releases are numbered.
+
 ---
 
 ## Step 2 — Add the plugin to Astro

@@ -32,7 +32,7 @@ Work through the checklist from the main [README](../README.md) (also copied bel
 ### Regression triggers
 
 - Bump EmDash minor: re-run manual QA (plugin APIs and admin routing can change).
-- Bump this plugin version after changing hooks or cookie shape: re-check banner and cookie JSON.
+- Bump this plugin’s **npm semver** after changing hooks or cookie shape: re-check banner and cookie JSON. Release numbering policy: [RELEASES.md](./RELEASES.md).
 
 ## CI suggestion
 
