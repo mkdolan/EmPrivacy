@@ -1,0 +1,63 @@
+{
+  "name": "emprivacy",
+  "version": "0.1.0",
+  "description": "Cookie consent and privacy notices for EmDash (GDPR, CCPA/CIPA-oriented configuration)",
+  "type": "module",
+  "main": "dist/index.mjs",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.mts"
+    },
+    "./sandbox": "./dist/sandbox-entry.mjs"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "docs"
+  ],
+  "keywords": [
+    "emdash",
+    "cms",
+    "plugin",
+    "privacy",
+    "cookie",
+    "consent",
+    "gdpr",
+    "ccpa",
+    "cmp"
+  ],
+  "author": "",
+  "license": "MIT",
+  "peerDependencies": {
+    "emdash": "^0.5.0"
+  },
+  "dependencies": {
+    "zod": "^4.3.5"
+  },
+  "devDependencies": {
+    "emdash": "^0.5.0",
+    "tsdown": "^0.20.3",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/emdash-cms/EmPrivacy.git"
+  },
+  "bugs": {
+    "url": "https://github.com/emdash-cms/EmPrivacy/issues"
+  },
+  "homepage": "https://github.com/emdash-cms/EmPrivacy#readme",
+  "scripts": {
+    "build": "tsdown src/index.ts src/sandbox-entry.ts --format esm --dts --clean",
+    "dev": "tsdown src/index.ts src/sandbox-entry.ts --format esm --dts --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
