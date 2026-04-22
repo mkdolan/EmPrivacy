@@ -300,11 +300,10 @@ var actions=document.createElement("div");
 actions.className="emprivacy-actions";
 function persist(a,m){
 writeCookie(JSON.stringify({v:C.policyVersion,a:a?1:0,m:m?1:0}));
-applyScripts(a,m);
-gtagUpdate(a,m);
 logServer(a,m);
-hide(bar);
-showTrigger();
+// For Cloudflare Web Analytics (and most tag-based analytics), injecting after load can miss the initial pageview.
+// Reload ensures the script runs in the normal page lifecycle immediately after consent is persisted.
+location.reload();
 }
 var btnAll=document.createElement("button");
 btnAll.type="button";
