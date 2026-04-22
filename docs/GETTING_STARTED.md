@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MIT -->
+
 # Getting started with EmPrivacy
 
 This guide is for site builders who want cookie consent working on an **EmDash** site without reading plugin source.

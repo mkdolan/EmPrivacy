@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MIT -->
+
 # EmPrivacy
 
 **EmPrivacy** is an open source [EmDash](https://github.com/emdash-cms/emdash) plugin that adds a cookie consent banner, category-based choices (essential / analytics / marketing), and **client-side** loading of third-party scripts only after consent. It aligns with common regulatory expectations when you configure it honestly and pair it with proper legal documents—but **this software is not legal advice** (see [Disclaimer](#legal-disclaimer)).

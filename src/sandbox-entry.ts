@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 import { definePlugin } from "emdash";
 import type {
 	PageFragmentContribution,

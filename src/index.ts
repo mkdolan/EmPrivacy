@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 import type { PluginDescriptor } from "emdash";
 
 import { PLUGIN_ID } from "./config.js";

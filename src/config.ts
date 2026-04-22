@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 /**
  * EmPrivacy KV document (`consent:config`) and shared helpers.
  */

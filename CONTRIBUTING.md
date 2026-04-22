@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MIT -->
+
 # Contributing to EmPrivacy
 
 Thanks for helping improve EmPrivacy.

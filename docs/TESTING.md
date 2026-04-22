@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MIT -->
+
 # Testing EmPrivacy before deploy
 
 Testing is split into **automated** checks (CI-friendly) and **manual** checks that require a running EmDash site, because the plugin integrates with EmDash’s runtime, KV, storage, admin Block Kit, and public page pipeline.
