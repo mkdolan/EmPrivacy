@@ -1,5 +1,13 @@
 <!-- SPDX-License-Identifier: MIT -->
 
+# emprivacy v0.1.3
+
+## Changes
+
+- Pin **Kysely** to a patched version via `overrides` so `npm audit` reports **0** high-severity issues from the `emdash` dev dependency tree (Kysely advisories).
+- Add `npm run audit` to CI and to `prepublishOnly` / `preversion` so releases fail if new audit findings appear.
+- New [docs/DEVELOPMENT.md](https://github.com/emdash-cms/EmPrivacy/blob/v0.1.3/docs/DEVELOPMENT.md) (dependency, audit, and deprecation context for maintainers).
+
 # emprivacy v0.1.2
 
 ## Changes
