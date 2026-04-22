@@ -1,6 +1,6 @@
 <!-- SPDX-License-Identifier: MIT -->
 
-# emprivacy (upcoming)
+# emprivacy v0.1.4
 
 ## Changes
 
