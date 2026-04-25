@@ -3,6 +3,9 @@
 # Local maintainer runbook (not committed; keep a backup or team copy)
 MAINTAINER_RELEASE.md
 
+# Local/internal security review prompt (not committed/published)
+docs/SECURITY_REVIEW_PROMPT.md
+
 node_modules/
 dist/
 *.tgz
