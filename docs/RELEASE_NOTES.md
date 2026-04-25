@@ -4,6 +4,12 @@
 
 ## Changes
 
+- No user-visible changes.
+
+# emprivacy v0.1.6
+
+## Changes
+
 - Compatibility: CI and manual QA verified with **EmDash `0.7.0`**.
 
 # emprivacy v0.1.5
