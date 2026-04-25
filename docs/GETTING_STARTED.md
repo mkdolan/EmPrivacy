@@ -136,4 +136,5 @@ For a full staging checklist (banner, strict mode, admin, optional logging, Goog
 
 - Main **[README](../README.md)** — disclaimer, features table, registration order, full testing section  
 - **[TESTING.md](./TESTING.md)** — pre-deploy QA and CI  
+- **[PLUGIN_SETTINGS.md](./PLUGIN_SETTINGS.md)** — what each admin setting does (with examples)
 - **[CONTRIBUTING.md](../CONTRIBUTING.md)** — how to contribute

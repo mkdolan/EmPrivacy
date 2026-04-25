@@ -548,6 +548,7 @@ async function buildSettingsPage(ctx: PluginContext) {
 	const analyticsText = cfg.analyticsScriptUrls.join("\n");
 	const marketingText = cfg.marketingScriptUrls.join("\n");
 	const platform = cfg.analyticsProvider;
+	const docsUrl = "https://github.com/mkdolan/EmPrivacy/blob/main/docs/PLUGIN_SETTINGS.md";
 
 	const consentFields = await (async () => {
 		try {
@@ -572,6 +573,10 @@ async function buildSettingsPage(ctx: PluginContext) {
 			{
 				type: "header" as const,
 				text: "EmPrivacy — Cookie & consent",
+			},
+			{
+				type: "context" as const,
+				text: `Documentation: ${docsUrl}`,
 			},
 			{
 				type: "context" as const,

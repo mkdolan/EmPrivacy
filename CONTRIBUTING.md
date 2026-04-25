@@ -4,6 +4,24 @@
 
 Thanks for helping improve EmPrivacy.
 
+## Licensing and sign-offs
+
+### SPDX headers in new files
+
+Any **new source file** should include an SPDX short identifier for the MIT license at the top of the file:
+
+```text
+SPDX-License-Identifier: MIT
+```
+
+### DCO sign-off on commits
+
+All commits should include a **DCO Signed-off-by** line. Create commits using the `-s` flag:
+
+```bash
+git commit -s -m "feat: describe the change"
+```
+
 ## Principles
 
 - Scope: trusted `page:fragments` CMP, KV-backed admin (Block Kit), no arbitrary admin HTML execution on the public site (see the main [README](./README.md#requirements) and [docs/TESTING.md](./docs/TESTING.md)).

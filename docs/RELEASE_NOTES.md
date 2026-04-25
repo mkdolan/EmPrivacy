@@ -1,5 +1,11 @@
 <!-- SPDX-License-Identifier: MIT -->
 
+# Unreleased
+
+## Changes
+
+- Compatibility: CI and manual QA verified with **EmDash `0.7.0`**.
+
 # emprivacy v0.1.5
 
 ## Changes
