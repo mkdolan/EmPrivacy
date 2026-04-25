@@ -61,10 +61,23 @@ export const DEFAULT_CONFIG: EmprivacyConfig = {
 	logConsentToServer: false,
 };
 
+function hasUnsafeUrlChars(s: string): boolean {
+	// Reject ASCII control chars and whitespace (incl. newlines and tabs).
+	return /[\u0000-\u001F\u007F\s]/.test(s);
+}
+
 function isHttpsUrl(s: string): boolean {
 	try {
-		const u = new URL(s);
-		return u.protocol === "https:";
+		const t = s.trim();
+		if (!t) return false;
+		if (hasUnsafeUrlChars(t)) return false;
+		// Block common percent-encoded control characters / whitespace to avoid surprising parsing.
+		if (/%0d|%0a|%09|%0b|%0c|%20/i.test(t)) return false;
+		const u = new URL(t);
+		if (u.protocol !== "https:") return false;
+		// Avoid surprising/unsafe URL forms.
+		if (u.username || u.password) return false;
+		return true;
 	} catch {
 		return false;
 	}
@@ -100,7 +113,7 @@ export function isRootRelativeSitePath(s: string): boolean {
 	if (t.length === 0) return false;
 	if (!t.startsWith("/")) return false;
 	if (t.startsWith("//")) return false;
-	if (/\s/.test(t)) return false;
+	if (hasUnsafeUrlChars(t)) return false;
 	return true;
 }
 
@@ -127,6 +140,17 @@ export function parseUrlList(text: string): string[] {
 		.map((l) => l.trim())
 		.filter(Boolean);
 	return [...new Set(lines)];
+}
+
+function assertLength(label: string, s: string, min: number, max: number): void {
+	const t = s.trim();
+	if (t.length < min) throw new Error(`${label} is required.`);
+	if (t.length > max) throw new Error(`${label} is too long.`);
+}
+
+function assertOptionalLength(label: string, s: string, max: number): void {
+	const t = s.trim();
+	if (t.length > max) throw new Error(`${label} is too long.`);
 }
 
 export function normalizeConfig(raw: unknown): EmprivacyConfig {
@@ -192,13 +216,17 @@ export function assertValidSavedConfig(input: {
 	googleConsentMode: boolean;
 	logConsentToServer: boolean;
 }): EmprivacyConfig {
-	if (!input.policyVersion.trim()) throw new Error("Policy version is required.");
+	assertLength("Policy version", input.policyVersion, 1, 64);
+	assertOptionalLength("Banner title", input.bannerTitle, 120);
+	assertOptionalLength("Short notice", input.bannerMessage, 600);
+
 	const privacyPolicyUrl = input.privacyPolicyUrl.trim();
 	if (!isValidPolicyHrefInput(privacyPolicyUrl)) {
 		throw new Error(
 			"Privacy policy must be a full https:// URL or a site path to your EmDash Page (e.g. /privacy).",
 		);
 	}
+	if (privacyPolicyUrl.length > 2048) throw new Error("Privacy policy URL/path is too long.");
 
 	let cookiePolicyUrl = input.cookiePolicyUrl.trim();
 	if (cookiePolicyUrl && !isValidPolicyHrefInput(cookiePolicyUrl)) {
@@ -206,6 +234,7 @@ export function assertValidSavedConfig(input: {
 			"Cookie policy must be a valid https:// URL or a root-relative path (e.g. /cookies), or empty.",
 		);
 	}
+	if (cookiePolicyUrl.length > 2048) throw new Error("Cookie policy URL/path is too long.");
 	if (!cookiePolicyUrl) cookiePolicyUrl = DEFAULT_CONFIG.cookiePolicyUrl;
 
 	const ap = input.analyticsPlatform.trim() || "cloudflare";
@@ -219,13 +248,19 @@ export function assertValidSavedConfig(input: {
 
 	const analyticsScriptUrls: string[] = [];
 	if (ap === "custom") {
-		for (const u of parseUrlList(input.analyticsUrlsText)) {
+		const list = parseUrlList(input.analyticsUrlsText);
+		if (list.length > 50) throw new Error("Analytics script URL list is too long (max 50).");
+		for (const u of list) {
+			if (u.length > 2048) throw new Error(invalidScriptUrlError("analytics", u));
 			if (!isHttpsUrl(u)) throw new Error(invalidScriptUrlError("analytics", u));
 			analyticsScriptUrls.push(u);
 		}
 	}
 	const marketingScriptUrls: string[] = [];
-	for (const u of parseUrlList(input.marketingUrlsText)) {
+	const mlist = parseUrlList(input.marketingUrlsText);
+	if (mlist.length > 50) throw new Error("Marketing script URL list is too long (max 50).");
+	for (const u of mlist) {
+		if (u.length > 2048) throw new Error(invalidScriptUrlError("marketing", u));
 		if (!isHttpsUrl(u)) throw new Error(invalidScriptUrlError("marketing", u));
 		marketingScriptUrls.push(u);
 	}
@@ -255,7 +290,22 @@ export interface ConsentRecordPayload {
 
 /** Safe to embed in `<script type="application/json">` (breakout-safe) */
 export function jsonForHtmlScript(value: unknown): string {
-	return JSON.stringify(value).replace(/</g, "\\u003c");
+	return JSON.stringify(value).replace(/[<>&\u2028\u2029]/g, (c) => {
+		switch (c) {
+			case "<":
+				return "\\u003c";
+			case ">":
+				return "\\u003e";
+			case "&":
+				return "\\u0026";
+			case "\u2028":
+				return "\\u2028";
+			case "\u2029":
+				return "\\u2029";
+			default:
+				return c;
+		}
+	});
 }
 
 export interface EmprivacyPublicRuntimeConfig {

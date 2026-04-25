@@ -131,6 +131,12 @@ describe("assertValidSavedConfig", () => {
 		).toThrow(/Policy version/);
 	});
 
+	it("rejects too-long policy version", () => {
+		expect(() =>
+			assertValidSavedConfig({ ...base, policyVersion: "x".repeat(100) }),
+		).toThrow(/too long/i);
+	});
+
 	it("rejects non-https privacy URL", () => {
 		expect(() =>
 			assertValidSavedConfig({ ...base, privacyPolicyUrl: "http://x.example" }),
@@ -154,6 +160,36 @@ describe("assertValidSavedConfig", () => {
 			}),
 		).toThrow(/Paste one full https:\/\//);
 	});
+
+	it("rejects script URLs with whitespace/control characters", () => {
+		expect(() =>
+			assertValidSavedConfig({
+				...base,
+				analyticsUrlsText: "https://cdn.example/a.js\r\nSet-Cookie:x=y",
+			}),
+		).toThrow(/Invalid analytics script URL/);
+	});
+
+	it("rejects script URLs with percent-encoded newlines", () => {
+		expect(() =>
+			assertValidSavedConfig({
+				...base,
+				analyticsUrlsText: "https://cdn.example/a.js%0d%0aSet-Cookie:x=y",
+			}),
+		).toThrow(/Invalid analytics script URL/);
+	});
+
+	it("rejects too many marketing URLs", () => {
+		const many = Array.from({ length: 60 }, (_, i) => `https://cdn.example/${i}.js`).join("\n");
+		expect(() =>
+			assertValidSavedConfig({
+				...base,
+				analyticsPlatform: "none",
+				analyticsUrlsText: "",
+				marketingUrlsText: many,
+			}),
+		).toThrow(/Marketing script URL list is too long/);
+	});
 });
 
 describe("assertValidCloudflareToken", () => {
@@ -170,5 +206,13 @@ describe("jsonForHtmlScript", () => {
 		const s = jsonForHtmlScript({ x: "</script>" });
 		expect(s).not.toContain("</script>");
 		expect(s).toContain("\\u003c");
+	});
+
+	it("escapes >, &, and line separators for inline script safety", () => {
+		const s = jsonForHtmlScript({ x: ">\u2028\u2029&" });
+		expect(s).toContain("\\u003e");
+		expect(s).toContain("\\u2028");
+		expect(s).toContain("\\u2029");
+		expect(s).toContain("\\u0026");
 	});
 });

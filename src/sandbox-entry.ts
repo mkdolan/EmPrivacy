@@ -26,7 +26,7 @@ const ADMIN_SETTINGS_PATH = "/settings";
 const SAVE_ACTION_ID = "emprivacy-save";
 
 const recordInput = z.object({
-	policyVersion: z.string().min(1),
+	policyVersion: z.string().trim().min(1).max(64),
 	analytics: z.boolean(),
 	marketing: z.boolean(),
 });
@@ -56,7 +56,7 @@ function absolutePolicyHref(stored: string, ctx: PluginContext): string | null {
 	if (!r) return null;
 	try {
 		const u = new URL(r);
-		if (u.protocol !== "https:" && u.protocol !== "http:") return null;
+		if (u.protocol !== "https:") return null;
 		return r;
 	} catch {
 		return null;
@@ -72,7 +72,22 @@ function buildGoogleConsentHeadScript(): string {
  * banner copy is applied with textContent / createTextNode.
  */
 function buildBodyBootstrap(pr: EmprivacyPublicRuntimeConfig): string {
-	const jsonLiteral = JSON.stringify(pr).replace(/</g, "\\u003c");
+	const jsonLiteral = JSON.stringify(pr).replace(/[<>&\u2028\u2029]/g, (c) => {
+		switch (c) {
+			case "<":
+				return "\\u003c";
+			case ">":
+				return "\\u003e";
+			case "&":
+				return "\\u0026";
+			case "\u2028":
+				return "\\u2028";
+			case "\u2029":
+				return "\\u2029";
+			default:
+				return c;
+		}
+	});
 
 	return `(function(){
 var C=${jsonLiteral};
@@ -80,7 +95,9 @@ var CN="${COOKIE_NAME}";
 function readCookie(){
 try{
 var m=document.cookie.match(new RegExp("(?:^|;\\\\s*)"+CN+"=([^;]*)"));
-return m?decodeURIComponent(m[1]):"";
+var v=m?decodeURIComponent(m[1]):"";
+if(!v||v.length>1024)return"";
+return v;
 }catch(e){return"";}
 }
 function writeCookie(val){
@@ -88,11 +105,21 @@ var secure=document.location.protocol==="https:"?"; Secure":"";
 document.cookie=CN+"="+encodeURIComponent(val)+"; Path=/; SameSite=Lax"+secure+"; Max-Age=31536000";
 }
 function parseState(s){
-try{return JSON.parse(s);}catch(e){return null;}
+try{
+var o=JSON.parse(s);
+if(!o||typeof o!=="object")return null;
+if(typeof o.v!=="string")return null;
+if(o.v!==C.policyVersion)return null;
+var a=o.a,m=o.m;
+var aOk=(a===0||a===1||a===true||a===false);
+var mOk=(m===0||m===1||m===true||m===false);
+if(!aOk||!mOk)return null;
+return {v:o.v,a:!!a,m:!!m};
+}catch(e){return null;}
 }
 function needBanner(){
 var c=parseState(readCookie());
-if(!c||c.v!==C.policyVersion)return true;
+if(!c)return true;
 return false;
 }
 function alreadyScriptSrc(u){
@@ -185,7 +212,7 @@ return {wrap:w,box:cb};
 function addPolicyLinks(links){
 function addOne(href,text){
 if(!href)return;
-var ok=href.indexOf("https://")===0||href.indexOf("http://")===0;
+var ok=href.indexOf("https://")===0;
 if(!ok)return;
 var a=document.createElement("a");
 a.href=href;
@@ -200,7 +227,7 @@ if(C.cookiePolicyUrl)addOne(C.cookiePolicyUrl,"Cookie policy");
 function openReopenPanel(){
 if(root.querySelector(".emprivacy-bar--reopen"))return;
 var st=parseState(readCookie());
-if(!st||st.v!==C.policyVersion)return;
+if(!st)return;
 hideTrigger();
 var aOn=!!st.a;
 var mOn=!!st.m;
@@ -268,8 +295,8 @@ root.appendChild(trigger);
 hideTrigger();
 if(!needBanner()){
 var st=parseState(readCookie());
-applyScripts(st&&st.a,st&&st.m);
-gtagUpdate(st&&st.a,st&&st.m);
+applyScripts(!!(st&&st.a),!!(st&&st.m));
+gtagUpdate(!!(st&&st.a),!!(st&&st.m));
 showTrigger();
 trigger.addEventListener("click",function(){openReopenPanel();});
 return;
@@ -522,17 +549,50 @@ export default definePlugin({
 				if (routeCtx.request.method !== "POST") {
 					return { ok: false };
 				}
+				// Same-origin hardening: this is a public route, but it should be called by pages on the site.
+				// If the browser sends an Origin header, enforce it to block cross-site POSTs (basic CSRF mitigation).
+				try {
+					const origin = routeCtx.request.headers.get("origin");
+					if (origin) {
+						const expected = new URL(ctx.url("/")).origin;
+						if (origin !== expected) return new Response("forbidden", { status: 403 });
+					}
+				} catch {
+					return new Response("bad_request", { status: 400 });
+				}
+
+				const ct = routeCtx.request.headers.get("content-type") ?? "";
+				if (!ct.toLowerCase().includes("application/json")) {
+					return new Response("unsupported_media_type", { status: 415 });
+				}
+
 				const cfg = await loadConfig(ctx);
 				if (!cfg.logConsentToServer) {
 					return { ok: false, reason: "logging_disabled" };
 				}
 				const input = routeCtx.input as z.infer<typeof recordInput>;
+				// Prevent log poisoning: only accept records for the active configured policyVersion.
+				if (input.policyVersion !== cfg.policyVersion) {
+					return new Response("policy_version_mismatch", { status: 400 });
+				}
 				const row: ConsentRecordPayload = {
 					createdAt: new Date().toISOString(),
 					policyVersion: input.policyVersion,
 					analytics: input.analytics,
 					marketing: input.marketing,
 				};
+				// Soft abuse mitigation: cap total stored rows (best-effort).
+				try {
+					const existing = await ctx.storage.consentEvents.query({
+						orderBy: { createdAt: "desc" },
+						limit: 500,
+					});
+					if (existing.items.length >= 500) {
+						return { ok: false, reason: "log_full" };
+					}
+				} catch {
+					// If query fails, proceed (storage may not support query in older EmDash versions).
+				}
 				await ctx.storage.consentEvents.put(
 					`${Date.now()}-${Math.random().toString(36).slice(2)}`,
 					row,
